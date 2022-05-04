@@ -1,30 +1,36 @@
-pragma solidity ^0.4.17;
+//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.13;
 
 contract Lottery {
     address public manager;
-    address[] public players;
+    //updated to address payable
+    address payable[] public players;
 
-    function Lottery() public {
+    //new constructor keyword - remove public keyword
+    constructor() {
         manager = msg.sender;
     }
-    //payable functions expect payment
+
     function enter() public payable {
         require(msg.value > .01 ether);
 
-        players.push(msg.sender);
+        players.push(payable(msg.sender));
     }
+
     function random() private view returns (uint) {
         //pseudo random generator
-        return uint(keccak256(block.difficulty, now, players));
+        return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, players)));
     }
+
     function pickWinner() public restricted{
 
         uint index = random() % players.length;
-        players[index].transfer(this.balance);
-        players = new address[](0);
+        players[index].transfer(address(this).balance);
+        players = new address payable[](0);
     }
-
-    function getplayers() public view returns(address[]) {
+    //specify the data location of address payable[] to be memory
+    function getplayers() public view returns(address payable[] memory) {
         return players;
     }
 
